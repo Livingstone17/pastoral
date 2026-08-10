@@ -114,7 +114,7 @@ export default function Contacts({ onBack }: Props) {
                     </span>
                   </div>
                   <span
-                    className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium"
+                    className="shrink-0 rounded-full px-2 py-0.5 text-[0.625rem] font-medium"
                     style={{ backgroundColor: colors.bg, color: colors.text }}
                   >
                     {RELATIONSHIP_LABELS[contact.relationshipType]}

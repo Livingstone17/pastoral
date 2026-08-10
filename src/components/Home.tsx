@@ -6,14 +6,11 @@ import {
   EVENT_TYPE_LABELS,
   NOTE_TYPE_LABELS,
   NOTE_TYPE_COLORS,
-  RELATIONSHIP_LABELS,
-  RELATIONSHIP_COLORS,
 } from '../types';
-import type { Note, Contact } from '../types';
+import type { Note } from '../types';
 import EventSheet from './EventSheet';
 import NoteSheet from './NoteSheet';
 import MessageSheet from './MessageSheet';
-import ContactSheet from './ContactSheet';
 import ScriptureChip from './ScriptureChip';
 
 type Tab = 'home' | 'calendar' | 'notes' | 'messages';
@@ -23,7 +20,7 @@ interface Props {
 }
 
 export default function Home({ onNavigate }: Props) {
-  const { user, events, notes, messages, contacts, addContact, logout } = useStore();
+  const { user, events, notes, messages, logout } = useStore();
   const today = new Date();
   const todayEvents = getEventsForDay(events, today);
   const recentNotes = [...notes]
@@ -37,52 +34,6 @@ export default function Home({ onNavigate }: Props) {
   const [eventSheet, setEventSheet] = useState(false);
   const [noteSheet, setNoteSheet] = useState(false);
   const [messageSheet, setMessageSheet] = useState(false);
-  const [contactSheet, setContactSheet] = useState<{ open: boolean; contact?: Contact }>({
-    open: false,
-  });
-
-  // Contact Picker API — Android/Chromium only; button hides elsewhere.
-  const canImportContacts = typeof navigator !== 'undefined' && 'contacts' in navigator;
-
-  async function importContacts() {
-    const nav = navigator as Navigator & {
-      contacts?: {
-        getProperties: () => Promise<string[]>;
-        select: (
-          props: string[],
-          opts: { multiple: boolean },
-        ) => Promise<Array<Record<string, string[] | undefined>>>;
-      };
-    };
-    if (!nav.contacts) return;
-    try {
-      const supported = await nav.contacts.getProperties();
-      const props = ['name', 'tel', 'email'].filter((p) => supported.includes(p));
-      if (props.length === 0) return;
-      const picked = await nav.contacts.select(props, { multiple: true });
-      let added = 0;
-      for (const c of picked) {
-        const name = Array.isArray(c.name) && c.name[0] ? c.name[0] : '';
-        const phone = Array.isArray(c.tel) && c.tel[0] ? c.tel[0] : '';
-        const email = Array.isArray(c.email) && c.email[0] ? c.email[0] : '';
-        if (!name && !phone && !email) continue;
-        addContact({
-          name: name || phone || email,
-          relationshipType: 'congregant',
-          phone: phone || undefined,
-          email: email || undefined,
-          notes: '',
-          tags: [],
-        });
-        added += 1;
-      }
-      if (added > 0) {
-        alert(`Imported ${added} contact${added === 1 ? '' : 's'} from your device.`);
-      }
-    } catch {
-      // User cancelled or the picker is unavailable.
-    }
-  }
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-parchment">
@@ -246,7 +197,7 @@ export default function Home({ onNavigate }: Props) {
         )}
 
         {/* Recent Notes */}
-        <section className="mt-6 px-5">
+        <section className="mt-6 px-5 pb-6">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-serif text-base font-semibold text-ink">Recent Notes</h2>
             <button
@@ -270,99 +221,26 @@ export default function Home({ onNavigate }: Props) {
           )}
         </section>
 
-        {/* People */}
-        <section className="mt-6 px-5 pb-6">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-serif text-base font-semibold text-ink">People</h2>
-            <div className="flex items-center gap-3">
-              {canImportContacts && (
-                <button
-                  onClick={importContacts}
-                  className="flex items-center gap-1 text-xs font-medium text-bark-light"
-                >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
-                  Import
-                </button>
-              )}
-              <button
-                onClick={() => setContactSheet({ open: true })}
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-warm-border bg-white text-bark shadow-sm transition-all active:scale-95"
-                aria-label="Add contact"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          {contacts.length === 0 ? (
-            <div className="rounded-2xl border border-warm-border bg-white px-5 py-6 text-center">
-              <p className="text-sm italic text-muted-ink">
-                No contacts yet — tap + to add one
-              </p>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2.5">
-              {contacts.map((contact) => {
-                const colors = RELATIONSHIP_COLORS[contact.relationshipType];
-                return (
-                  <button
-                    key={contact.id}
-                    onClick={() => setContactSheet({ open: true, contact })}
-                    className="flex items-center gap-3 rounded-2xl border border-warm-border bg-white px-4 py-3.5 shadow-sm text-left transition-all hover:border-bark/30 active:scale-[0.98]"
-                  >
-                    <div
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-serif text-sm font-semibold"
-                      style={{ backgroundColor: colors.bg, color: colors.text }}
-                    >
-                      {contact.name.charAt(0)}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium text-ink">
-                        {contact.name}
-                      </span>
-                      <span className="block truncate text-xs text-muted-ink">
-                        {contact.phone || contact.email || RELATIONSHIP_LABELS[contact.relationshipType]}
-                      </span>
-                    </div>
-                    <span
-                      className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium"
-                      style={{ backgroundColor: colors.bg, color: colors.text }}
-                    >
-                      {RELATIONSHIP_LABELS[contact.relationshipType]}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </section>
       </div>
 
       <EventSheet open={eventSheet} onClose={() => setEventSheet(false)} />
       <NoteSheet open={noteSheet} onClose={() => setNoteSheet(false)} />
       <MessageSheet open={messageSheet} onClose={() => setMessageSheet(false)} />
-      <ContactSheet
-        open={contactSheet.open}
-        contact={contactSheet.contact}
-        onClose={() => setContactSheet({ open: false })}
-      />
     </div>
   );
 }
 
 function NotePreviewCard({ note }: { note: Note }) {
   const colors = NOTE_TYPE_COLORS[note.type];
+  const { darkMode } = useStore();
   return (
     <div
       className="rounded-2xl border border-warm-border bg-white px-4 py-3.5 shadow-sm"
-      style={note.type === 'counseling' ? { backgroundColor: '#F8F4FC' } : {}}
+      style={
+        note.type === 'counseling'
+          ? { backgroundColor: darkMode ? '#2A2333' : '#F8F4FC' }
+          : {}
+      }
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-1.5">
@@ -375,7 +253,7 @@ function NotePreviewCard({ note }: { note: Note }) {
           <span className="text-sm font-medium text-ink">{note.title}</span>
         </div>
         <span
-          className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium"
+          className="shrink-0 rounded-full px-2 py-0.5 text-[0.625rem] font-medium"
           style={{ backgroundColor: colors.bg, color: colors.text }}
         >
           {NOTE_TYPE_LABELS[note.type]}

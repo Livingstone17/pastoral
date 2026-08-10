@@ -2,7 +2,7 @@ import { useStore } from '../store';
 import type { FontSize } from '../types';
 
 const FONT_SIZE_OPTIONS: { id: FontSize; label: string; size: number }[] = [
-  { id: 'small', label: 'Small', size: 15 },
+  { id: 'small', label: 'Small', size: 14 },
   { id: 'normal', label: 'Normal', size: 16 },
   { id: 'large', label: 'Large', size: 18 },
   { id: 'xlarge', label: 'Extra Large', size: 20 },
@@ -14,7 +14,7 @@ interface Props {
 }
 
 export default function Settings({ onBack }: Props) {
-  const { fontSize, setFontSize } = useStore();
+  const { fontSize, setFontSize, darkMode, setDarkMode } = useStore();
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-parchment">
@@ -37,6 +37,43 @@ export default function Settings({ onBack }: Props) {
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 pb-6">
+        {/* Appearance */}
+        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-ink">
+          Appearance
+        </p>
+        <div className="mb-6 rounded-2xl border border-warm-border bg-white shadow-sm">
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            role="switch"
+            aria-checked={darkMode}
+            className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors hover:bg-sand/30"
+          >
+            <span className="flex items-center gap-3.5">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sand text-bark">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                </svg>
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-medium text-ink">Dark Mode</span>
+                <span className="block text-xs text-muted-ink">Use a darker color scheme</span>
+              </span>
+            </span>
+            <span
+              className={`relative h-6 w-10 shrink-0 rounded-full transition-colors ${
+                darkMode ? 'bg-bark' : 'border border-warm-border bg-sand'
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                  darkMode ? 'translate-x-5' : 'translate-x-0.5'
+                }`}
+              />
+            </span>
+          </button>
+        </div>
+
+        {/* Text Size */}
         <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-ink">Text Size</p>
         <div className="rounded-2xl border border-warm-border bg-white p-2 shadow-sm">
           {FONT_SIZE_OPTIONS.map((opt) => {
@@ -68,7 +105,7 @@ export default function Settings({ onBack }: Props) {
                     height="18"
                     viewBox="0 0 24 24"
                     fill="none"
-                    stroke="#5B3E2B"
+                    stroke="var(--color-bark)"
                     strokeWidth="2.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"

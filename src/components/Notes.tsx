@@ -146,6 +146,7 @@ export default function Notes({ onBack }: Props) {
 
 function NoteCard({ note, onTap }: { note: Note; onTap: () => void }) {
   const colors = NOTE_TYPE_COLORS[note.type];
+  const { darkMode } = useStore();
   const isCounseling = note.type === 'counseling';
   const date = new Date(note.updatedAt).toLocaleDateString('en-US', {
     month: 'short',
@@ -157,7 +158,13 @@ function NoteCard({ note, onTap }: { note: Note; onTap: () => void }) {
       role="button"
       tabIndex={0}
       className="w-full cursor-pointer rounded-2xl border border-warm-border px-4 py-4 text-left shadow-sm transition-all active:scale-[0.98]"
-      style={{ backgroundColor: isCounseling ? '#F8F4FC' : '#FFFFFF' }}
+      style={{
+        backgroundColor: isCounseling
+          ? darkMode
+            ? '#2A2333'
+            : '#F8F4FC'
+          : 'var(--color-white)',
+      }}
       onClick={onTap}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -189,7 +196,7 @@ function NoteCard({ note, onTap }: { note: Note; onTap: () => void }) {
         <div className="flex shrink-0 items-center gap-2">
           <span className="text-xs text-muted-ink">{date}</span>
           <span
-            className="rounded-full px-2 py-0.5 text-[10px] font-medium"
+            className="rounded-full px-2 py-0.5 text-[0.625rem] font-medium"
             style={{ backgroundColor: colors.bg, color: colors.text }}
           >
             {NOTE_TYPE_LABELS[note.type]}
@@ -215,7 +222,7 @@ function NoteCard({ note, onTap }: { note: Note; onTap: () => void }) {
       {note.tags.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1">
           {note.tags.slice(0, 4).map((tag) => (
-            <span key={tag} className="rounded-full bg-sand px-2 py-0.5 text-[10px] text-muted-ink">
+            <span key={tag} className="rounded-full bg-sand px-2 py-0.5 text-[0.625rem] text-muted-ink">
               {tag}
             </span>
           ))}

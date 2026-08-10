@@ -82,7 +82,7 @@ export default function BottomNav({ active, onChange }: Props) {
             >
               {tab.icon(isActive)}
               <span
-                className={`text-[10px] font-medium tracking-wide ${isActive ? 'text-bark' : 'text-muted-ink'}`}
+                className={`text-[0.625rem] font-medium tracking-wide ${isActive ? 'text-bark' : 'text-muted-ink'}`}
               >
                 {tab.label}
               </span>

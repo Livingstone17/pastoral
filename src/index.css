@@ -15,11 +15,29 @@
   --font-serif: 'Lora', Georgia, serif;
 }
 
+/*
+ * Dark mode: re-theme by overriding the design tokens. Every utility color
+ * is var()-backed (--color-*), so redefining them under .dark re-themes the
+ * whole app — including --color-white, which backs bg-white card surfaces.
+ * The .dark class is applied to <html> from the store's darkMode preference.
+ */
+.dark {
+  --color-parchment: #191613;
+  --color-sand: #27221d;
+  --color-warm-border: #3c352c;
+  --color-bark: #c9a87c;
+  --color-bark-light: #b08e6b;
+  --color-ink: #f1ebe2;
+  --color-muted-ink: #a69884;
+  --color-gold: #c9a94e;
+  --color-white: #221e19;
+}
+
 html,
 body,
 #root {
   height: 100%;
-  background-color: #faf8f5;
+  background-color: var(--color-parchment);
 }
 
 /*
@@ -31,13 +49,13 @@ html {
   font-size: 16px;
 }
 html.fs-small {
-  font-size: 15px;
+  font-size: 14px;
 }
 html.fs-large {
-  font-size: 17.5px;
+  font-size: 18px;
 }
 html.fs-xlarge {
-  font-size: 19px;
+  font-size: 20px;
 }
 
 /*
@@ -65,7 +83,7 @@ html.fs-xlarge {
 
 body {
   font-family: 'Outfit', system-ui, sans-serif;
-  color: #1e1812;
+  color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none;
@@ -75,7 +93,7 @@ input,
 textarea,
 select {
   font-family: 'Outfit', system-ui, sans-serif;
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 ::-webkit-scrollbar {

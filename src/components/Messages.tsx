@@ -297,7 +297,7 @@ function MessageCard({
           <div className="flex flex-wrap items-center gap-2 mb-1">
             {/* Status Badge */}
             <span
-              className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase ${
+              className={`rounded-full px-2.5 py-0.5 text-[0.625rem] font-semibold tracking-wide uppercase ${
                 message.status === 'delivered'
                   ? 'bg-bark/10 text-bark'
                   : message.status === 'draft'
@@ -386,7 +386,7 @@ function MessageCard({
       {message.tags.length > 0 && (
         <div className="mt-2.5 flex flex-wrap gap-1">
           {message.tags.map((tag) => (
-            <span key={tag} className="rounded-full bg-sand px-2 py-0.5 text-[10px] text-muted-ink">
+            <span key={tag} className="rounded-full bg-sand px-2 py-0.5 text-[0.625rem] text-muted-ink">
               #{tag}
             </span>
           ))}
@@ -400,13 +400,13 @@ function MessageCard({
           className="mt-3.5 rounded-xl border border-warm-border/60 bg-parchment/60 p-3"
         >
           <div className="flex items-center justify-between pb-1.5 border-b border-warm-border/40">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-ink">
+            <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted-ink">
               Outline Preview
             </span>
             <div className="flex items-center gap-2">
               <button
                 onClick={onCopyOutline}
-                className="text-[11px] font-medium text-bark-light hover:text-bark flex items-center gap-1"
+                className="text-[0.6875rem] font-medium text-bark-light hover:text-bark flex items-center gap-1"
               >
                 {isCopied ? (
                   <span className="text-emerald-700 font-semibold">Copied!</span>
@@ -429,7 +429,7 @@ function MessageCard({
               </button>
               <button
                 onClick={onToggleExpand}
-                className="text-[11px] font-medium text-bark-light hover:text-bark"
+                className="text-[0.6875rem] font-medium text-bark-light hover:text-bark"
               >
                 {isExpanded ? 'Collapse' : 'Expand'}
               </button>
@@ -491,7 +491,7 @@ function SeriesView({
             {series.description && (
               <p className="mt-1 text-xs leading-relaxed text-muted-ink">{series.description}</p>
             )}
-            <p className="mt-1 text-[11px] text-bark-light font-medium">
+            <p className="mt-1 text-[0.6875rem] text-bark-light font-medium">
               {series.startDate} {series.endDate ? `– ${series.endDate}` : ''}
             </p>
           </div>

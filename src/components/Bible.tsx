@@ -367,7 +367,7 @@ function BookList({ books, onSelect }: { books: BibleBook[]; onSelect: (book: Bi
               >
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-medium text-ink">{b.name}</span>
-                  <span className="block text-[11px] text-muted-ink">
+                  <span className="block text-[0.6875rem] text-muted-ink">
                     {b.chapters} chapter{b.chapters === 1 ? '' : 's'}
                   </span>
                 </span>
@@ -489,12 +489,12 @@ function ChapterView({
           <h2 className="font-serif text-xl font-semibold leading-tight text-ink">
             {bookName} {chapter}
           </h2>
-          {loading && <p className="mt-0.5 animate-pulse text-[11px] text-muted-ink">Loading…</p>}
+          {loading && <p className="mt-0.5 animate-pulse text-[0.6875rem] text-muted-ink">Loading…</p>}
         </div>
         <button
           onClick={onCopy}
           disabled={!verses}
-          className="shrink-0 rounded-lg border border-warm-border bg-white px-2.5 py-1.5 text-[11px] font-medium text-bark-light transition-colors hover:border-bark/40 hover:text-bark disabled:opacity-40"
+          className="shrink-0 rounded-lg border border-warm-border bg-white px-2.5 py-1.5 text-[0.6875rem] font-medium text-bark-light transition-colors hover:border-bark/40 hover:text-bark disabled:opacity-40"
         >
           {copied ? '✓ Copied' : 'Copy chapter'}
         </button>
@@ -522,18 +522,18 @@ function ChapterView({
                 <p
                   key={v.pk ?? v.verse}
                   id={`bible-verse-${v.verse}`}
-                  className={`text-[15px] leading-relaxed text-ink ${
+                  className={`text-[0.9375rem] leading-relaxed text-ink ${
                     isHighlighted ? '-mx-1.5 rounded-lg border border-[#EAD9A0] bg-[#FDF6E3] px-1.5 py-1' : ''
                   }`}
                 >
-                  <sup className="mr-1.5 font-serif text-[11px] font-semibold text-bark-light">{v.verse}</sup>
+                  <sup className="mr-1.5 font-serif text-[0.6875rem] font-semibold text-bark-light">{v.verse}</sup>
                   <VerseText text={v.text} testament={book?.testament ?? 'OT'} onStrongs={onStrongs} />
                 </p>
               );
             })}
           </div>
           {hasStrongsMarkup && (
-            <p className="mt-4 text-[11px] text-muted-ink/70">
+            <p className="mt-4 text-[0.6875rem] text-muted-ink/70">
               Superscript numbers are Strong's references — tap one to see the definition. ({translation})
             </p>
           )}
@@ -590,7 +590,7 @@ function VerseText({
             type="button"
             onClick={() => onStrongs(`${prefix}${token.strongs}`)}
             title={`Strong's ${prefix}${token.strongs}`}
-            className="mx-0.5 inline-flex h-3.5 min-w-3.5 items-center justify-center rounded-sm bg-[#FDF6E3] px-0.5 align-super text-[9px] font-semibold leading-none text-[#8A6A18] transition-colors hover:bg-[#F3E6C2]"
+            className="mx-0.5 inline-flex h-3.5 min-w-3.5 items-center justify-center rounded-sm bg-[#FDF6E3] px-0.5 align-super text-[0.5625rem] font-semibold leading-none text-[#8A6A18] transition-colors hover:bg-[#F3E6C2]"
           >
             {token.strongs}
           </button>

@@ -62,6 +62,8 @@ interface StoreCtx {
   contacts: Contact[];
   fontSize: FontSize;
   setFontSize: (size: FontSize) => void;
+  darkMode: boolean;
+  setDarkMode: (on: boolean) => void;
   login: (email: string, password: string) => Promise<boolean>;
   signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -86,6 +88,19 @@ if (typeof document !== 'undefined') {
   document.documentElement.classList.add(`fs-${initialFontSize}`);
 }
 
+// Saved dark-mode preference, falling back to the system color scheme.
+const initialDarkMode = (() => {
+  const saved = load<boolean | null>('shepherd_dark_mode', null);
+  if (saved !== null) return saved;
+  return (
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-color-scheme: dark)').matches === true
+  );
+})();
+if (typeof document !== 'undefined') {
+  document.documentElement.classList.toggle('dark', initialDarkMode);
+}
+
 const Ctx = createContext<StoreCtx | null>(null);
 
 export function useStore() {
@@ -108,6 +123,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     load('shepherd_contacts', SEED_CONTACTS),
   );
   const [fontSize, setFontSizeState] = useState<FontSize>(initialFontSize);
+  const [darkMode, setDarkModeState] = useState<boolean>(initialDarkMode);
 
   // Firebase Auth state listener
   useEffect(() => {
@@ -149,6 +165,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     el.classList.remove('fs-small', 'fs-normal', 'fs-large', 'fs-xlarge');
     el.classList.add(`fs-${fontSize}`);
   }, [fontSize]);
+
+  useEffect(() => {
+    save('shepherd_dark_mode', darkMode);
+    document.documentElement.classList.toggle('dark', darkMode);
+  }, [darkMode]);
 
   // Sync Firestore collections when authenticated
   useEffect(() => {
@@ -450,6 +471,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   };
 
   const setFontSize = (size: FontSize) => setFontSizeState(size);
+  const setDarkMode = (on: boolean) => setDarkModeState(on);
 
   return (
     <Ctx.Provider
@@ -462,6 +484,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         contacts,
         fontSize,
         setFontSize,
+        darkMode,
+        setDarkMode,
         login,
         signup,
         logout,
