@@ -1,0 +1,10 @@
+{
+  "description": "A mobile-first personal assistant for pastors to manage events, notes, and sermons with fast search and a calm, uncluttered interface for ministry work.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
