@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 
-type Tab = 'home' | 'calendar' | 'notes' | 'messages';
+type Tab = 'home' | 'calendar' | 'bible' | 'notes' | 'messages';
 
 interface Props {
   active: Tab;
@@ -27,6 +27,16 @@ const tabs: { id: Tab; label: string; icon: (active: boolean) => ReactElement }[
         <line x1="16" y1="2" x2="16" y2="6" />
         <line x1="8" y1="2" x2="8" y2="6" />
         <line x1="3" y1="10" x2="21" y2="10" />
+      </svg>
+    ),
+  },
+  {
+    id: 'bible',
+    label: 'Bible',
+    icon: (active) => (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2 : 1.7} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" fill={active ? 'currentColor' : 'none'} fillOpacity={active ? 0.08 : 0} />
+        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" fill={active ? 'currentColor' : 'none'} fillOpacity={active ? 0.08 : 0} />
       </svg>
     ),
   },

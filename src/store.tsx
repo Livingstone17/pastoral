@@ -72,6 +72,9 @@ interface StoreCtx {
   addMessage: (m: Omit<Message, 'id'>) => void;
   updateMessage: (m: Message) => void;
   deleteMessage: (id: string) => void;
+  addContact: (c: Omit<Contact, 'id'>) => void;
+  updateContact: (c: Contact) => void;
+  deleteContact: (id: string) => void;
 }
 
 const Ctx = createContext<StoreCtx | null>(null);
@@ -132,14 +135,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user) return;
 
+    // Demo mode keeps its seeded data. Only real Firebase accounts
+    // reset local state and subscribe to their own Firestore data.
+    if (auth.app.options.apiKey === 'demo-api-key') return;
+
     // Reset stub data for authenticated user
     setEvents([]);
     setNotes([]);
     setMessages([]);
     setSeries([]);
     setContacts([]);
-
-    if (auth.app.options.apiKey === 'demo-api-key') return;
 
     try {
       const eventsQ = query(collection(db, 'events'), where('userId', '==', user.id));
@@ -396,6 +401,35 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const addContact = (c: Omit<Contact, 'id'>) => {
+    const newId = uid();
+    const item = { ...c, id: newId };
+    setContacts((prev) => [...prev, item]);
+    if (user && auth.app.options.apiKey !== 'demo-api-key') {
+      setDoc(doc(db, 'contacts', newId), cleanDoc({ ...item, userId: user.id })).catch((err) => {
+        console.error('Firestore addContact error:', err);
+      });
+    }
+  };
+
+  const updateContact = (c: Contact) => {
+    setContacts((prev) => prev.map((x) => (x.id === c.id ? c : x)));
+    if (user && auth.app.options.apiKey !== 'demo-api-key') {
+      setDoc(doc(db, 'contacts', c.id), cleanDoc({ ...c, userId: user.id }), { merge: true }).catch(
+        (err) => {
+          console.error('Firestore updateContact error:', err);
+        },
+      );
+    }
+  };
+
+  const deleteContact = (id: string) => {
+    setContacts((prev) => prev.filter((x) => x.id !== id));
+    if (user && auth.app.options.apiKey !== 'demo-api-key') {
+      deleteDoc(doc(db, 'contacts', id)).catch(() => { });
+    }
+  };
+
   return (
     <Ctx.Provider
       value={{
@@ -417,6 +451,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         addMessage,
         updateMessage,
         deleteMessage,
+        addContact,
+        updateContact,
+        deleteContact,
       }}
     >
       {children}

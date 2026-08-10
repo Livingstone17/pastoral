@@ -135,10 +135,18 @@ function NoteCard({ note, onTap }: { note: Note; onTap: () => void }) {
   });
 
   return (
-    <button
-      className="w-full rounded-2xl border border-warm-border px-4 py-4 text-left shadow-sm transition-all active:scale-[0.98]"
+    <div
+      role="button"
+      tabIndex={0}
+      className="w-full cursor-pointer rounded-2xl border border-warm-border px-4 py-4 text-left shadow-sm transition-all active:scale-[0.98]"
       style={{ backgroundColor: isCounseling ? '#F8F4FC' : '#FFFFFF' }}
       onClick={onTap}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onTap();
+        }
+      }}
     >
       <div className="mb-2 flex items-start justify-between gap-2">
         <div className="flex items-center gap-1.5">
@@ -195,6 +203,6 @@ function NoteCard({ note, onTap }: { note: Note; onTap: () => void }) {
           ))}
         </div>
       )}
-    </button>
+    </div>
   );
 }

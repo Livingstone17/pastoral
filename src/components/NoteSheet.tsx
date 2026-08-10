@@ -13,7 +13,7 @@ interface Props {
 }
 
 export default function NoteSheet({ open, note, onClose }: Props) {
-  const { addNote, updateNote, deleteNote } = useStore();
+  const { addNote, updateNote, deleteNote, contacts } = useStore();
   const isEditing = !!note;
 
   const [form, setForm] = useState({
@@ -23,6 +23,7 @@ export default function NoteSheet({ open, note, onClose }: Props) {
     scriptureRefs: [] as string[],
     tags: [] as string[],
     isPrivate: false,
+    linkedContactId: '',
   });
   const [refInput, setRefInput] = useState('');
   const [tagInput, setTagInput] = useState('');
@@ -37,9 +38,18 @@ export default function NoteSheet({ open, note, onClose }: Props) {
         scriptureRefs: [...note.scriptureRefs],
         tags: [...note.tags],
         isPrivate: note.isPrivate,
+        linkedContactId: note.linkedContactId ?? '',
       });
     } else {
-      setForm({ title: '', body: '', type: 'sermon_prep', scriptureRefs: [], tags: [], isPrivate: false });
+      setForm({
+        title: '',
+        body: '',
+        type: 'sermon_prep',
+        scriptureRefs: [],
+        tags: [],
+        isPrivate: false,
+        linkedContactId: '',
+      });
     }
     setRefInput('');
     setTagInput('');
@@ -71,7 +81,7 @@ export default function NoteSheet({ open, note, onClose }: Props) {
       tags: form.tags,
       isPrivate: form.type === 'counseling' ? true : form.isPrivate,
       linkedMessageId: note?.linkedMessageId,
-      linkedContactId: note?.linkedContactId,
+      linkedContactId: form.linkedContactId || undefined,
     };
     if (isEditing && note) {
       updateNote({ ...note, ...data });
@@ -129,6 +139,24 @@ export default function NoteSheet({ open, note, onClose }: Props) {
             </span>
           </div>
         )}
+
+        <div>
+          <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-ink">
+            Linked contact (optional)
+          </label>
+          <select
+            value={form.linkedContactId}
+            onChange={(e) => setForm((f) => ({ ...f, linkedContactId: e.target.value }))}
+            className="w-full rounded-xl border border-warm-border bg-sand/40 px-4 py-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-bark/20"
+          >
+            <option value="">No contact</option>
+            {contacts.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <div>
           <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-ink">

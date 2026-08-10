@@ -9,6 +9,7 @@ export type EventType =
 
 export type NoteType = 'sermon_prep' | 'personal' | 'counseling' | 'study';
 export type MessageStatus = 'draft' | 'delivered' | 'archived';
+export type RelationshipType = 'congregant' | 'colleague' | 'venue';
 
 export interface CalendarEvent {
   id: string;
@@ -61,7 +62,7 @@ export interface Series {
 export interface Contact {
   id: string;
   name: string;
-  relationshipType: 'congregant' | 'colleague' | 'venue';
+  relationshipType: RelationshipType;
   phone?: string;
   email?: string;
   notes?: string;
@@ -109,4 +110,16 @@ export const NOTE_TYPE_COLORS: Record<NoteType, { bg: string; text: string; bord
   personal: { bg: '#E8F2FA', text: '#1A4A7A', border: '#4A80BB' },
   counseling: { bg: '#F0ECF8', text: '#4A3272', border: '#7A62AA' },
   study: { bg: '#E6F3EC', text: '#1A5A38', border: '#3A8858' },
+};
+
+export const RELATIONSHIP_LABELS: Record<RelationshipType, string> = {
+  congregant: 'Congregant',
+  colleague: 'Colleague',
+  venue: 'Venue',
+};
+
+export const RELATIONSHIP_COLORS: Record<RelationshipType, { bg: string; text: string; dot: string }> = {
+  congregant: { bg: '#E8F2FA', text: '#1A4A7A', dot: '#4A80BB' },
+  colleague: { bg: '#E6F3EC', text: '#1A5A38', dot: '#3A8858' },
+  venue: { bg: '#FEF3E2', text: '#8A5A0A', dot: '#D4922A' },
 };

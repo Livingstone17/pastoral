@@ -8,6 +8,18 @@ const EVENT_TYPES: EventType[] = [
   'service', 'wedding', 'funeral', 'hospital_visit', 'counseling', 'speaking', 'meeting',
 ];
 
+interface EventForm {
+  title: string;
+  type: EventType;
+  location: string;
+  startTime: string;
+  endTime: string;
+  notes: string;
+  recurrence: '' | 'weekly' | 'monthly';
+  reminder: string;
+  linkedContactId: string;
+}
+
 interface Props {
   open: boolean;
   event?: CalendarEvent;
@@ -15,11 +27,25 @@ interface Props {
   onClose: () => void;
 }
 
+const RECURRENCE_OPTIONS: { id: EventForm['recurrence']; label: string }[] = [
+  { id: '', label: 'Does not repeat' },
+  { id: 'weekly', label: 'Weekly' },
+  { id: 'monthly', label: 'Monthly' },
+];
+
+const REMINDER_OPTIONS: { id: string; label: string }[] = [
+  { id: '', label: 'None' },
+  { id: '15m', label: '15 min' },
+  { id: '30m', label: '30 min' },
+  { id: '1h', label: '1 hour' },
+  { id: '1d', label: '1 day' },
+];
+
 export default function EventSheet({ open, event, defaultDate, onClose }: Props) {
-  const { addEvent, updateEvent, deleteEvent } = useStore();
+  const { addEvent, updateEvent, deleteEvent, contacts } = useStore();
   const isEditing = !!event;
 
-  function makeDefaults(date?: Date) {
+  function makeDefaults(date?: Date): EventForm {
     const d = date ?? new Date();
     const start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 9, 0);
     const end = new Date(start.getTime() + 60 * 60 * 1000);
@@ -30,10 +56,13 @@ export default function EventSheet({ open, event, defaultDate, onClose }: Props)
       startTime: toDatetimeLocal(start.toISOString()),
       endTime: toDatetimeLocal(end.toISOString()),
       notes: '',
+      recurrence: '',
+      reminder: '',
+      linkedContactId: '',
     };
   }
 
-  const [form, setForm] = useState(makeDefaults(defaultDate));
+  const [form, setForm] = useState<EventForm>(makeDefaults(defaultDate));
 
   useEffect(() => {
     if (!open) return;
@@ -45,6 +74,9 @@ export default function EventSheet({ open, event, defaultDate, onClose }: Props)
         startTime: toDatetimeLocal(event.startTime),
         endTime: toDatetimeLocal(event.endTime),
         notes: event.notes ?? '',
+        recurrence: (event.recurrence ?? '') as EventForm['recurrence'],
+        reminder: event.reminder ?? '',
+        linkedContactId: event.linkedContactId ?? '',
       });
     } else {
       setForm(makeDefaults(defaultDate));
@@ -60,6 +92,9 @@ export default function EventSheet({ open, event, defaultDate, onClose }: Props)
       startTime: fromDatetimeLocal(form.startTime),
       endTime: fromDatetimeLocal(form.endTime),
       notes: form.notes || undefined,
+      recurrence: form.recurrence || undefined,
+      reminder: form.reminder || undefined,
+      linkedContactId: form.linkedContactId || undefined,
     };
     if (isEditing && event) {
       updateEvent({ ...event, ...data });
@@ -109,6 +144,72 @@ export default function EventSheet({ open, event, defaultDate, onClose }: Props)
               );
             })}
           </div>
+        </div>
+
+        <div>
+          <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-ink">
+            Repeats
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {RECURRENCE_OPTIONS.map(({ id, label }) => {
+              const active = form.recurrence === id;
+              return (
+                <button
+                  key={id || 'none'}
+                  onClick={() => setForm((f) => ({ ...f, recurrence: id }))}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
+                    active
+                      ? 'border-bark bg-bark text-white'
+                      : 'border-warm-border bg-transparent text-muted-ink'
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-ink">
+            Reminder
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {REMINDER_OPTIONS.map(({ id, label }) => {
+              const active = form.reminder === id;
+              return (
+                <button
+                  key={id || 'none'}
+                  onClick={() => setForm((f) => ({ ...f, reminder: id }))}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
+                    active
+                      ? 'border-bark bg-bark text-white'
+                      : 'border-warm-border bg-transparent text-muted-ink'
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-ink">
+            Linked contact (optional)
+          </label>
+          <select
+            value={form.linkedContactId}
+            onChange={(e) => setForm((f) => ({ ...f, linkedContactId: e.target.value }))}
+            className="w-full rounded-xl border border-warm-border bg-sand/40 px-4 py-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-bark/20"
+          >
+            <option value="">No contact</option>
+            {contacts.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
