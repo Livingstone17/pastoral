@@ -1,3 +1,5 @@
+export type FontSize = 'small' | 'normal' | 'large' | 'xlarge';
+
 export type EventType =
   | 'service'
   | 'wedding'

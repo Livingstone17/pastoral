@@ -23,6 +23,24 @@ body,
 }
 
 /*
+ * Text-size setting (Settings > Text size). Tailwind text utilities are
+ * rem-based, so scaling the root font size scales all app text proportionally
+ * (native text-zoom behavior). Set from the store's fontSize preference.
+ */
+html {
+  font-size: 16px;
+}
+html.fs-small {
+  font-size: 15px;
+}
+html.fs-large {
+  font-size: 17.5px;
+}
+html.fs-xlarge {
+  font-size: 19px;
+}
+
+/*
  * Full-viewport app shell. Uses the dynamic viewport height (dvh) so the
  * bottom nav stays pinned to the visible screen on mobile even while the
  * browser URL bar expands/collapses. Falls back to 100vh where dvh is
@@ -31,6 +49,18 @@ body,
 .app-shell {
   height: 100vh;
   height: 100dvh;
+}
+
+/*
+ * Tab headers sit below the status bar/notch when the app is installed as a
+ * standalone PWA. env(safe-area-inset-top) is 0 in a normal browser tab and
+ * the notch height in standalone mode, so the header clears the status bar
+ * in both. The static 3rem line is a fallback for browsers without env();
+ * the calc line replaces it where supported. Replaces Tailwind's pt-12.
+ */
+@utility safe-top {
+  padding-top: 3rem;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 3rem);
 }
 
 body {

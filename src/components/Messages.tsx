@@ -78,7 +78,7 @@ export default function Messages() {
   return (
     <div className="flex h-full flex-col overflow-hidden bg-parchment">
       {/* Header */}
-      <div className="shrink-0 px-5 pt-12 pb-4">
+      <div className="safe-top shrink-0 px-5 pb-4">
         <div className="mb-3 flex items-center justify-between">
           <div>
             <h1 className="font-serif text-2xl font-semibold text-ink">Sermons & Messages</h1>

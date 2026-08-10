@@ -54,7 +54,7 @@ export default function Calendar() {
   return (
     <div className="flex h-full flex-col overflow-hidden bg-parchment">
       {/* Month nav + grid */}
-      <div className="shrink-0 px-5 pt-12 pb-3">
+      <div className="safe-top shrink-0 px-5 pb-3">
         <div className="mb-5 flex items-center justify-between">
           <h1 className="font-serif text-2xl font-semibold text-ink">Calendar</h1>
           <button

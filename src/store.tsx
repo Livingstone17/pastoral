@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import type { User, CalendarEvent, Note, Message, Series, Contact } from './types';
+import type { User, CalendarEvent, Note, Message, Series, Contact, FontSize } from './types';
 import { SEED_EVENTS, SEED_NOTES, SEED_MESSAGES, SEED_SERIES, SEED_CONTACTS } from './seed';
 import { auth, db } from './firebase';
 import {
@@ -60,6 +60,8 @@ interface StoreCtx {
   messages: Message[];
   series: Series[];
   contacts: Contact[];
+  fontSize: FontSize;
+  setFontSize: (size: FontSize) => void;
   login: (email: string, password: string) => Promise<boolean>;
   signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -75,6 +77,13 @@ interface StoreCtx {
   addContact: (c: Omit<Contact, 'id'>) => void;
   updateContact: (c: Contact) => void;
   deleteContact: (id: string) => void;
+}
+
+// Apply the saved text-size preference before first paint (module scope runs
+// before React renders) so a reload doesn't flash the default font size.
+const initialFontSize = load<FontSize>('shepherd_font_size', 'normal');
+if (typeof document !== 'undefined') {
+  document.documentElement.classList.add(`fs-${initialFontSize}`);
 }
 
 const Ctx = createContext<StoreCtx | null>(null);
@@ -98,6 +107,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [contacts, setContacts] = useState<Contact[]>(() =>
     load('shepherd_contacts', SEED_CONTACTS),
   );
+  const [fontSize, setFontSizeState] = useState<FontSize>(initialFontSize);
 
   // Firebase Auth state listener
   useEffect(() => {
@@ -130,6 +140,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     save('shepherd_messages', messages);
   }, [messages]);
+
+  // Text-size preference: persist on this device and apply to the root
+  // element so every rem-based text utility scales app-wide.
+  useEffect(() => {
+    save('shepherd_font_size', fontSize);
+    const el = document.documentElement;
+    el.classList.remove('fs-small', 'fs-normal', 'fs-large', 'fs-xlarge');
+    el.classList.add(`fs-${fontSize}`);
+  }, [fontSize]);
 
   // Sync Firestore collections when authenticated
   useEffect(() => {
@@ -430,6 +449,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const setFontSize = (size: FontSize) => setFontSizeState(size);
+
   return (
     <Ctx.Provider
       value={{
@@ -439,6 +460,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         messages,
         series,
         contacts,
+        fontSize,
+        setFontSize,
         login,
         signup,
         logout,

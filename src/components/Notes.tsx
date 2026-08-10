@@ -12,7 +12,12 @@ const FILTERS: { id: NoteType | 'all'; label: string }[] = [
   { id: 'study', label: 'Study' },
 ];
 
-export default function Notes() {
+interface Props {
+  /** When set, shows a back button (More tab sub-screen). */
+  onBack?: () => void;
+}
+
+export default function Notes({ onBack }: Props) {
   const { notes } = useStore();
   const [filter, setFilter] = useState<NoteType | 'all'>('all');
   const [search, setSearch] = useState('');
@@ -35,9 +40,22 @@ export default function Notes() {
   return (
     <div className="flex h-full flex-col overflow-hidden bg-parchment">
       {/* Header */}
-      <div className="shrink-0 px-5 pt-12 pb-4">
+      <div className="safe-top shrink-0 px-5 pb-4">
         <div className="mb-4 flex items-center justify-between">
-          <h1 className="font-serif text-2xl font-semibold text-ink">Notes</h1>
+          <div className="flex items-center gap-2.5">
+            {onBack && (
+              <button
+                onClick={onBack}
+                aria-label="Back"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-warm-border bg-white text-bark shadow-sm transition-all active:scale-95"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15,18 9,12 15,6" />
+                </svg>
+              </button>
+            )}
+            <h1 className="font-serif text-2xl font-semibold text-ink">Notes</h1>
+          </div>
           <button
             onClick={() => setSheet({ open: true })}
             className="flex h-9 w-9 items-center justify-center rounded-full bg-bark shadow-sm"

@@ -88,7 +88,7 @@ export default function Home({ onNavigate }: Props) {
     <div className="flex h-full flex-col overflow-hidden bg-parchment">
       <div className="flex-1 overflow-y-auto">
         {/* Header */}
-        <div className="px-5 pb-5 pt-12">
+        <div className="safe-top px-5 pb-5">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm text-muted-ink">
