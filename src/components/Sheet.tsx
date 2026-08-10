@@ -5,9 +5,11 @@ interface Props {
   onClose: () => void;
   title: string;
   children: ReactNode;
+  /** Caps the sheet height; long content scrolls inside the sheet. */
+  maxHeight?: string;
 }
 
-export default function Sheet({ open, onClose, title, children }: Props) {
+export default function Sheet({ open, onClose, title, children, maxHeight = '92vh' }: Props) {
   useEffect(() => {
     if (open) {
       document.body.style.overflow = 'hidden';
@@ -27,7 +29,7 @@ export default function Sheet({ open, onClose, title, children }: Props) {
       />
       <div
         className={`fixed bottom-0 left-0 right-0 z-50 flex flex-col rounded-t-3xl bg-white shadow-2xl transition-transform duration-300 ${open ? 'translate-y-0' : 'translate-y-full'}`}
-        style={{ maxHeight: '92vh' }}
+        style={{ maxHeight }}
       >
         <div className="flex justify-center pt-3 pb-1 shrink-0">
           <div className="h-1 w-10 rounded-full bg-warm-border" />

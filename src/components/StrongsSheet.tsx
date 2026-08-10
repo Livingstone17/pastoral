@@ -46,7 +46,12 @@ export default function StrongsSheet({ open, strongsNumber, onClose }: Props) {
   }, [open, strongsNumber]);
 
   return (
-    <Sheet open={open} onClose={onClose} title={`Strong's ${strongsNumber ?? ''}`}>
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title={`Strong's ${strongsNumber ?? ''}`}
+      maxHeight="50vh"
+    >
       {loading ? (
         <div className="flex flex-col gap-3 py-4">
           <div className="h-6 w-24 animate-pulse rounded-lg bg-sand" />

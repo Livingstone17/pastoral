@@ -269,9 +269,11 @@ export default function Bible({ onClose, targetRef, onRefConsumed }: Props) {
         ) : view === 'books' ? (
           <BookList
             books={books}
-            translation={translation}
-            onSelect={setBook}
-            onOpenChapter={loadChapter}
+            onSelect={(b) => {
+              // Tap a book -> chapter picker.
+              setBook(b);
+              setView('chapters');
+            }}
           />
         ) : view === 'chapters' && book ? (
           <ChapterGrid
@@ -340,17 +342,7 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
 
 // ---- Book list -----------------------------------------------------------
 
-function BookList({
-  books,
-  translation,
-  onSelect,
-  onOpenChapter,
-}: {
-  books: BibleBook[];
-  translation: TranslationId;
-  onSelect: (book: BibleBook) => void;
-  onOpenChapter: (book: BibleBook, chapter: number, translation: TranslationId) => Promise<void>;
-}) {
+function BookList({ books, onSelect }: { books: BibleBook[]; onSelect: (book: BibleBook) => void }) {
   const ot = books.filter((b) => b.testament === 'OT');
   const nt = books.filter((b) => b.testament === 'NT');
 
@@ -370,16 +362,28 @@ function BookList({
             {list.map((b) => (
               <button
                 key={b.id}
-                onClick={() => {
-                  onSelect(b);
-                  if (b.chapters === 1) void onOpenChapter(b, 1, translation);
-                }}
-                className="rounded-xl border border-warm-border bg-white px-3 py-2.5 text-left shadow-sm transition-all hover:border-bark/40 hover:shadow active:scale-[0.98]"
+                onClick={() => onSelect(b)}
+                className="flex items-center justify-between gap-2 rounded-xl border border-warm-border bg-white px-3 py-2.5 text-left shadow-sm transition-all hover:border-bark/40 hover:shadow active:scale-[0.98]"
               >
-                <span className="block text-sm font-medium text-ink">{b.name}</span>
-                <span className="text-[11px] text-muted-ink">
-                  {b.chapters} chapter{b.chapters === 1 ? '' : 's'}
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-medium text-ink">{b.name}</span>
+                  <span className="block text-[11px] text-muted-ink">
+                    {b.chapters} chapter{b.chapters === 1 ? '' : 's'}
+                  </span>
                 </span>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="shrink-0 text-warm-border"
+                >
+                  <polyline points="9,18 15,12 9,6" />
+                </svg>
               </button>
             ))}
           </div>

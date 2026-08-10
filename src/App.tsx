@@ -19,8 +19,8 @@ function AppInner() {
   if (!user) return <Auth />;
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-parchment">
-      <div className="flex-1 overflow-hidden">
+    <div className="app-shell flex flex-col overflow-hidden bg-parchment">
+      <div className="min-h-0 flex-1 overflow-hidden">
         {tab === 'home' && <Home onNavigate={setTab} />}
         {tab === 'calendar' && <Calendar />}
         {tab === 'bible' && <Bible />}
