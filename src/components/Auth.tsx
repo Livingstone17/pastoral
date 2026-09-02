@@ -37,7 +37,7 @@ export default function Auth() {
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           </svg>
         </div>
-        <h1 className="font-serif text-3xl font-semibold text-ink">Shepherd</h1>
+        <h1 className="font-serif text-3xl font-semibold text-ink">Pastoral</h1>
         <p className="mt-1 text-sm text-muted-ink">Your ministry companion</p>
       </div>
 
@@ -111,10 +111,6 @@ export default function Auth() {
           </button>
         </div>
       </div>
-
-      <p className="mt-6 text-center text-xs text-muted-ink/60">
-        Demo: any email and password will work
-      </p>
     </div>
   );
 }

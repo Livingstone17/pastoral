@@ -10,6 +10,7 @@ import {
 import type { Note } from '../types';
 import EventSheet from './EventSheet';
 import NoteSheet from './NoteSheet';
+import NoteViewSheet from './NoteViewSheet';
 import MessageSheet from './MessageSheet';
 import ScriptureChip from './ScriptureChip';
 
@@ -33,6 +34,8 @@ export default function Home({ onNavigate }: Props) {
 
   const [eventSheet, setEventSheet] = useState(false);
   const [noteSheet, setNoteSheet] = useState(false);
+  const [viewNote, setViewNote] = useState<Note | null>(null);
+  const [editNote, setEditNote] = useState<Note | null>(null);
   const [messageSheet, setMessageSheet] = useState(false);
 
   return (
@@ -215,7 +218,7 @@ export default function Home({ onNavigate }: Props) {
           ) : (
             <div className="flex flex-col gap-2.5">
               {recentNotes.map((note) => (
-                <NotePreviewCard key={note.id} note={note} />
+                <NotePreviewCard key={note.id} note={note} onClick={() => setViewNote(note)} />
               ))}
             </div>
           )}
@@ -224,18 +227,29 @@ export default function Home({ onNavigate }: Props) {
       </div>
 
       <EventSheet open={eventSheet} onClose={() => setEventSheet(false)} />
-      <NoteSheet open={noteSheet} onClose={() => setNoteSheet(false)} />
+      <NoteViewSheet
+        open={viewNote !== null}
+        note={viewNote}
+        onClose={() => setViewNote(null)}
+        onEdit={(n) => {
+          setViewNote(null);
+          setEditNote(n);
+          setTimeout(() => setNoteSheet(true), 150);
+        }}
+      />
+      <NoteSheet open={noteSheet} note={editNote ?? undefined} onClose={() => { setNoteSheet(false); setEditNote(null); }} />
       <MessageSheet open={messageSheet} onClose={() => setMessageSheet(false)} />
     </div>
   );
 }
 
-function NotePreviewCard({ note }: { note: Note }) {
+function NotePreviewCard({ note, onClick }: { note: Note; onClick: () => void }) {
   const colors = NOTE_TYPE_COLORS[note.type];
   const { darkMode } = useStore();
   return (
     <div
-      className="rounded-2xl border border-warm-border bg-white px-4 py-3.5 shadow-sm"
+      onClick={onClick}
+      className="rounded-2xl border border-warm-border bg-white px-4 py-3.5 shadow-sm cursor-pointer transition-all hover:border-bark/30 active:scale-[0.98]"
       style={
         note.type === 'counseling'
           ? { backgroundColor: darkMode ? '#2A2333' : '#F8F4FC' }
