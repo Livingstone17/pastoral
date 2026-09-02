@@ -9,11 +9,32 @@ interface Props {
   onClose: () => void;
 }
 
-/** The dataset's definition HTML uses pseudo-links with junk hrefs — strip them. */
+/**
+ * Allowlist-based HTML sanitizer for Strong's definition content.
+ * Only permits safe tags: b, i, p, ol, li, a (with href limited to http/https).
+ * Strips everything else to prevent XSS from compromised upstream data.
+ */
 function sanitizeStrongsHtml(html: string): string {
-  return html
-    .replace(/<a\s+class="T"[^>]*>/gi, '<span class="font-medium">')
-    .replace(/<\/a>/gi, '</span>');
+  const allowed = /^(b|i|p|ol|li|a|br)$/i;
+  const safeAttrs = /^(href|class)$/i;
+
+  return html.replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)\b([^>]*)>/g, (match, tag: string, attrs: string) => {
+    if (!allowed.test(tag)) return '';
+
+    // For closing tags, strip attributes
+    if (match[1] === '/') return `</${tag}>`;
+
+    // For <a> tags, only allow http/https hrefs
+    if (tag.toLowerCase() === 'a') {
+      const hrefMatch = attrs.match(/href="([^"]*)"/i);
+      const href = hrefMatch?.[1] ?? '';
+      if (!/^https?:\/\//.test(href)) return '';
+      return `<a href="${href.replace(/"/g, '&quot;')}">`;
+    }
+
+    // For other allowed tags, strip all attributes
+    return `<${tag}>`;
+  });
 }
 
 export default function StrongsSheet({ open, strongsNumber, onClose }: Props) {
