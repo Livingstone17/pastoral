@@ -393,6 +393,17 @@ function MessageCard({
         </div>
       )}
 
+      {/* Voice Memo Badge */}
+      {message.voiceMemo && (
+        <div className="mt-2.5 flex items-center gap-1.5 rounded-lg bg-bark/10 px-2.5 py-1 w-fit">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" />
+            <path d="M19 10v2a7 7 0 01-14 0v-2" />
+          </svg>
+          <span className="text-[0.625rem] font-medium text-bark">Voice memo</span>
+        </div>
+      )}
+
       {/* Outline Section */}
       {message.outline && (
         <div

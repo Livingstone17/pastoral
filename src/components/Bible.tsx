@@ -592,7 +592,7 @@ function VerseText({
             title={`Strong's ${prefix}${token.strongs}`}
             className="mx-0.5 inline-flex h-3.5 min-w-3.5 items-center justify-center rounded-sm bg-[#FDF6E3] px-0.5 align-super text-[0.5625rem] font-semibold leading-none text-[#8A6A18] transition-colors hover:bg-[#F3E6C2]"
           >
-            {token.strongs}
+            {prefix}{token.strongs}
           </button>
         );
       })}

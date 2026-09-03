@@ -64,6 +64,8 @@ interface StoreCtx {
   setFontSize: (size: FontSize) => void;
   darkMode: boolean;
   setDarkMode: (on: boolean) => void;
+  autoDarkMode: boolean;
+  setAutoDarkMode: (on: boolean) => void;
   login: (email: string, password: string) => Promise<boolean>;
   signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -124,6 +126,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
   const [fontSize, setFontSizeState] = useState<FontSize>(initialFontSize);
   const [darkMode, setDarkModeState] = useState<boolean>(initialDarkMode);
+  const [autoDarkMode, setAutoDarkModeState] = useState<boolean>(() =>
+    load<boolean>('shepherd_auto_dark_mode', false),
+  );
 
   // Firebase Auth state listener
   useEffect(() => {
@@ -170,6 +175,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     save('shepherd_dark_mode', darkMode);
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
+
+  useEffect(() => {
+    save('shepherd_auto_dark_mode', autoDarkMode);
+  }, [autoDarkMode]);
 
   // Sync Firestore collections when authenticated
   useEffect(() => {
@@ -472,6 +481,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const setFontSize = (size: FontSize) => setFontSizeState(size);
   const setDarkMode = (on: boolean) => setDarkModeState(on);
+  const setAutoDarkMode = (on: boolean) => setAutoDarkModeState(on);
 
   return (
     <Ctx.Provider
@@ -486,6 +496,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setFontSize,
         darkMode,
         setDarkMode,
+        autoDarkMode,
+        setAutoDarkMode,
         login,
         signup,
         logout,

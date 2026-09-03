@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { StoreProvider, useStore } from './store';
+import { useAutoDarkMode } from './hooks/useAutoDarkMode';
+import { useOnlineStatus } from './hooks/useOnlineStatus';
 import Auth from './components/Auth';
 import Home from './components/Home';
 import Calendar from './components/Calendar';
@@ -13,7 +15,11 @@ import { subscribeToBibleRef } from './services/bible/bible.service';
 type Tab = 'home' | 'calendar' | 'bible' | 'messages' | 'more';
 
 function AppInner() {
-  const { user } = useStore();
+  const { user, autoDarkMode, setDarkMode } = useStore();
+
+  const handleDark = useCallback(() => setDarkMode(true), [setDarkMode]);
+  const handleLight = useCallback(() => setDarkMode(false), [setDarkMode]);
+  useAutoDarkMode({ enabled: autoDarkMode, onDark: handleDark, onLight: handleLight });
   const [tab, setTab] = useState<Tab>('home');
   const [moreSection, setMoreSection] = useState<MoreSection>('menu');
   // Bumped to remount the More tab (back to its menu) when the nav "More"
@@ -47,6 +53,7 @@ function AppInner() {
 
   return (
     <div className="app-shell flex flex-col overflow-hidden bg-parchment">
+      <OfflineBanner />
       <div className="min-h-0 flex-1 overflow-hidden">
         {tab === 'home' && <Home onNavigate={handleHomeNavigate} />}
         {tab === 'calendar' && <Calendar />}
@@ -68,6 +75,16 @@ function BibleHost() {
 
   return (
     <BibleSheet open={!!reference} reference={reference} onClose={() => setReference(null)} />
+  );
+}
+
+function OfflineBanner() {
+  const online = useOnlineStatus();
+  if (online) return null;
+  return (
+    <div className="shrink-0 bg-amber-100 px-4 py-1.5 text-center text-xs font-medium text-amber-800">
+      You're offline — changes will sync when reconnected
+    </div>
   );
 }
 

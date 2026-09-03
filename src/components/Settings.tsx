@@ -14,7 +14,27 @@ interface Props {
 }
 
 export default function Settings({ onBack }: Props) {
-  const { fontSize, setFontSize, darkMode, setDarkMode } = useStore();
+  const { fontSize, setFontSize, darkMode, setDarkMode, autoDarkMode, setAutoDarkMode } = useStore();
+
+  function handleAutoDarkToggle() {
+    if (!autoDarkMode) {
+      // Enabling auto mode — request location permission
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          () => {
+            setAutoDarkMode(true);
+          },
+          () => {
+            alert('Location access is needed for automatic dark mode. You can enable it in your browser settings.');
+          },
+        );
+      } else {
+        alert('Your browser does not support geolocation.');
+      }
+    } else {
+      setAutoDarkMode(false);
+    }
+  }
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-parchment">
@@ -67,6 +87,45 @@ export default function Settings({ onBack }: Props) {
               <span
                 className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
                   darkMode ? 'translate-x-5' : 'translate-x-0.5'
+                }`}
+              />
+            </span>
+          </button>
+
+          {/* Auto Dark Mode */}
+          <button
+            onClick={handleAutoDarkToggle}
+            role="switch"
+            aria-checked={autoDarkMode}
+            className="flex w-full items-center justify-between gap-3 border-t border-warm-border px-4 py-4 text-left transition-colors hover:bg-sand/30"
+          >
+            <span className="flex items-center gap-3.5">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sand text-bark">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="5" />
+                  <line x1="12" y1="1" x2="12" y2="3" />
+                  <line x1="12" y1="21" x2="12" y2="23" />
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                  <line x1="1" y1="12" x2="3" y2="12" />
+                  <line x1="21" y1="12" x2="23" y2="12" />
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </svg>
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-medium text-ink">Auto Dark Mode</span>
+                <span className="block text-xs text-muted-ink">Switch at sunset / sunrise</span>
+              </span>
+            </span>
+            <span
+              className={`relative h-6 w-10 shrink-0 rounded-full transition-colors ${
+                autoDarkMode ? 'bg-bark' : 'border border-warm-border bg-sand'
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                  autoDarkMode ? 'translate-x-5' : 'translate-x-0.5'
                 }`}
               />
             </span>

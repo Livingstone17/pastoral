@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useStore } from '../store';
 import Sheet from './Sheet';
 import ScriptureChip from './ScriptureChip';
+import VoiceMemoButton from './VoiceMemoButton';
 import type { Message, MessageStatus } from '../types';
 
 const STATUSES: { id: MessageStatus; label: string }[] = [
@@ -28,6 +29,7 @@ export default function MessageSheet({ open, message, onClose }: Props) {
     outline: '',
     scriptureRefs: [] as string[],
     tags: [] as string[],
+    voiceMemo: undefined as string | undefined,
   });
   const [refInput, setRefInput] = useState('');
   const [tagInput, setTagInput] = useState('');
@@ -43,6 +45,7 @@ export default function MessageSheet({ open, message, onClose }: Props) {
         outline: message.outline,
         scriptureRefs: [...message.scriptureRefs],
         tags: [...message.tags],
+        voiceMemo: message.voiceMemo,
       });
     } else {
       setForm({
@@ -53,6 +56,7 @@ export default function MessageSheet({ open, message, onClose }: Props) {
         outline: '',
         scriptureRefs: [],
         tags: [],
+        voiceMemo: undefined,
       });
     }
     setRefInput('');
@@ -85,6 +89,7 @@ export default function MessageSheet({ open, message, onClose }: Props) {
       outline: form.outline,
       scriptureRefs: form.scriptureRefs,
       tags: form.tags,
+      voiceMemo: form.voiceMemo,
       linkedEventId: message?.linkedEventId,
     };
     if (isEditing && message) {
@@ -256,6 +261,17 @@ export default function MessageSheet({ open, message, onClose }: Props) {
               Add
             </button>
           </div>
+        </div>
+
+        {/* Voice Memo */}
+        <div>
+          <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-ink">
+            Voice Memo
+          </label>
+          <VoiceMemoButton
+            value={form.voiceMemo}
+            onChange={(dataUrl) => setForm((f) => ({ ...f, voiceMemo: dataUrl }))}
+          />
         </div>
 
         {/* Outline */}

@@ -50,6 +50,8 @@ export interface Message {
   linkedEventId?: string;
   outline: string;
   status: MessageStatus;
+  /** Voice memo as a base64 data URL. */
+  voiceMemo?: string;
 }
 
 export interface Series {
