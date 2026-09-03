@@ -518,17 +518,42 @@ function ChapterView({
             {verses.map((v) => {
               const isHighlighted =
                 highlight !== null && v.verse >= highlight.start && v.verse <= highlight.end;
+              const verseText = plainVerseText(v.text);
               return (
-                <p
+                <div
                   key={v.pk ?? v.verse}
                   id={`bible-verse-${v.verse}`}
-                  className={`text-[0.9375rem] leading-relaxed text-ink ${
+                  className={`group relative text-[0.9375rem] leading-relaxed text-ink ${
                     isHighlighted ? '-mx-1.5 rounded-lg border border-[#EAD9A0] bg-[#FDF6E3] px-1.5 py-1' : ''
                   }`}
                 >
                   <sup className="mr-1.5 font-serif text-[0.6875rem] font-semibold text-bark-light">{v.verse}</sup>
                   <VerseText text={v.text} testament={book?.testament ?? 'OT'} onStrongs={onStrongs} />
-                </p>
+                  <button
+                    onClick={async () => {
+                      const text = `${verseText} — ${bookName} ${chapter}:${v.verse}`;
+                      try {
+                        if (navigator.share) {
+                          await navigator.share({ text });
+                        } else {
+                          await navigator.clipboard.writeText(text);
+                        }
+                      } catch {
+                        await navigator.clipboard.writeText(text);
+                      }
+                    }}
+                    className="absolute right-0 top-0 flex h-6 w-6 items-center justify-center rounded-full text-muted-ink opacity-0 transition-all hover:bg-sand hover:text-bark group-hover:opacity-100"
+                    title="Share verse"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="18" cy="5" r="3" />
+                      <circle cx="6" cy="12" r="3" />
+                      <circle cx="18" cy="19" r="3" />
+                      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                    </svg>
+                  </button>
+                </div>
               );
             })}
           </div>

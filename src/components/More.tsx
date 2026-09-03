@@ -2,8 +2,9 @@ import { useState, type ReactElement } from 'react';
 import Notes from './Notes';
 import Contacts from './Contacts';
 import Settings from './Settings';
+import ReadingPlans from './ReadingPlans';
 
-export type MoreSection = 'menu' | 'notes' | 'contacts' | 'settings';
+export type MoreSection = 'menu' | 'notes' | 'contacts' | 'reading-plans' | 'settings';
 
 interface Props {
   /** Section to show on mount (used for deep-links into the More tab). */
@@ -43,6 +44,17 @@ const MENU_ITEMS: {
     ),
   },
   {
+    id: 'reading-plans',
+    label: 'Reading Plans',
+    subtitle: 'Daily Bible reading plans with progress',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" />
+        <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" />
+      </svg>
+    ),
+  },
+  {
     id: 'settings',
     label: 'Settings',
     subtitle: 'Text size and app preferences',
@@ -60,6 +72,10 @@ export default function More({ initialSection = 'menu' }: Props) {
 
   if (section === 'notes') return <Notes onBack={() => setSection('menu')} />;
   if (section === 'contacts') return <Contacts onBack={() => setSection('menu')} />;
+  if (section === 'reading-plans') return <ReadingPlans onBack={() => setSection('menu')} onOpenBible={(ref) => {
+    // Navigate to Bible tab with the reference
+    window.dispatchEvent(new CustomEvent('pastoral:open-bible', { detail: { ref } }));
+  }} />;
   if (section === 'settings') return <Settings onBack={() => setSection('menu')} />;
 
   return (

@@ -13,6 +13,7 @@ import NoteSheet from './NoteSheet';
 import NoteViewSheet from './NoteViewSheet';
 import MessageSheet from './MessageSheet';
 import ScriptureChip from './ScriptureChip';
+import VerseOfDay from './VerseOfDay';
 
 type Tab = 'home' | 'calendar' | 'notes' | 'messages';
 
@@ -116,6 +117,11 @@ export default function Home({ onNavigate }: Props) {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Verse of the Day */}
+        <div className="mt-5 px-5">
+          <VerseOfDay onOpenBible={(ref) => window.dispatchEvent(new CustomEvent('pastoral:open-bible', { detail: { ref } }))} />
         </div>
 
         {/* Today's Schedule */}

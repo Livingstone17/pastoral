@@ -25,6 +25,17 @@ function AppInner() {
   // Bumped to remount the More tab (back to its menu) when the nav "More"
   // is tapped again — native tab-reset behavior.
   const [moreReset, setMoreReset] = useState(0);
+  const [bibleRef, setBibleRef] = useState<string | null>(null);
+
+  // Listen for pastoral:open-bible events from VerseOfDay, ReadingPlans, etc.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.ref) setBibleRef(detail.ref);
+    };
+    window.addEventListener('pastoral:open-bible', handler);
+    return () => window.removeEventListener('pastoral:open-bible', handler);
+  }, []);
 
   if (!user) return <Auth />;
 
@@ -63,6 +74,7 @@ function AppInner() {
       </div>
       <BottomNav active={tab} onChange={handleTabChange} />
       <BibleHost />
+      <BibleSheet open={!!bibleRef} reference={bibleRef} onClose={() => setBibleRef(null)} />
     </div>
   );
 }
