@@ -1,19 +1,35 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { saveVoiceMemo, loadVoiceMemo, deleteVoiceMemo, memoKey } from '../services/voiceMemoStore';
 
 interface Props {
-  value?: string; // base64 data URL
-  onChange: (dataUrl: string | undefined) => void;
+  /** Memo key (e.g. "memo-m1") — NOT a base64 data URL. */
+  value?: string;
+  onChange: (key: string | undefined) => void;
+  /** The message ID, used to generate the storage key. */
+  messageId: string;
 }
 
-export default function VoiceMemoButton({ value, onChange }: Props) {
+export default function VoiceMemoButton({ value, onChange, messageId }: Props) {
   const [recording, setRecording] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
+  const [hasMemo, setHasMemo] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const objectUrlRef = useRef<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Check if a memo exists in IndexedDB
+  useEffect(() => {
+    if (value) {
+      loadVoiceMemo(value).then((blob) => setHasMemo(!!blob));
+    } else {
+      setHasMemo(false);
+    }
+  }, [value]);
+
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -21,13 +37,29 @@ export default function VoiceMemoButton({ value, onChange }: Props) {
         audioRef.current.pause();
         audioRef.current = null;
       }
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+      }
     };
+  }, []);
+
+  const stopRecording = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (mediaRecorderRef.current?.state === 'recording') {
+      mediaRecorderRef.current.stop();
+    }
+    setRecording(false);
   }, []);
 
   async function startRecording() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      const mediaRecorder = new MediaRecorder(stream, {
+        // Prefer a compact audio format to reduce storage
+        mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+          ? 'audio/webm;codecs=opus'
+          : 'audio/webm',
+      });
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
@@ -35,13 +67,18 @@ export default function VoiceMemoButton({ value, onChange }: Props) {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
 
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          onChange(reader.result as string);
-        };
-        reader.readAsDataURL(blob);
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(chunksRef.current, { type: mediaRecorder.mimeType || 'audio/webm' });
+        const key = memoKey(messageId);
+        try {
+          await saveVoiceMemo(key, blob);
+          onChange(key);
+          setHasMemo(true);
+        } catch {
+          if (import.meta.env.DEV) {
+            console.error('Failed to save voice memo to IndexedDB');
+          }
+        }
         stream.getTracks().forEach((t) => t.stop());
       };
 
@@ -52,25 +89,22 @@ export default function VoiceMemoButton({ value, onChange }: Props) {
         setDuration((d) => d + 1);
       }, 1000);
     } catch {
-      // Microphone permission denied or not available
       alert('Microphone access is needed for voice memos.');
     }
   }
 
-  function stopRecording() {
-    if (timerRef.current) clearInterval(timerRef.current);
-    if (mediaRecorderRef.current?.state === 'recording') {
-      mediaRecorderRef.current.stop();
-    }
-    setRecording(false);
-  }
-
-  function playAudio() {
+  async function playAudio() {
     if (!value) return;
     if (audioRef.current) {
       audioRef.current.pause();
     }
-    const audio = new Audio(value);
+    const blob = await loadVoiceMemo(value);
+    if (!blob) return;
+    // Revoke any previous object URL
+    if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    const url = URL.createObjectURL(blob);
+    objectUrlRef.current = url;
+    const audio = new Audio(url);
     audioRef.current = audio;
     audio.onended = () => setPlaying(false);
     audio.play();
@@ -82,13 +116,21 @@ export default function VoiceMemoButton({ value, onChange }: Props) {
     setPlaying(false);
   }
 
-  function deleteRecording() {
+  async function deleteRecording() {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
     }
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
+    if (value) {
+      await deleteVoiceMemo(value).catch(() => {});
+    }
     setPlaying(false);
     setDuration(0);
+    setHasMemo(false);
     onChange(undefined);
   }
 
@@ -129,7 +171,7 @@ export default function VoiceMemoButton({ value, onChange }: Props) {
   }
 
   // Has a recording
-  if (value) {
+  if (value && hasMemo) {
     return (
       <div className="flex items-center gap-3 rounded-xl border border-warm-border bg-sand/40 px-4 py-3">
         <button

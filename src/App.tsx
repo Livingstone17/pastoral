@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { StoreProvider, useStore } from './store';
+import { isDemoMode } from './firebase';
 import { useAutoDarkMode } from './hooks/useAutoDarkMode';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import Auth from './components/Auth';
@@ -15,7 +16,7 @@ import { subscribeToBibleRef } from './services/bible/bible.service';
 type Tab = 'home' | 'calendar' | 'bible' | 'messages' | 'more';
 
 function AppInner() {
-  const { user, autoDarkMode, setDarkMode } = useStore();
+  const { user, authLoading, autoDarkMode, setDarkMode } = useStore();
 
   const handleDark = useCallback(() => setDarkMode(true), [setDarkMode]);
   const handleLight = useCallback(() => setDarkMode(false), [setDarkMode]);
@@ -36,6 +37,16 @@ function AppInner() {
     window.addEventListener('pastoral:open-bible', handler);
     return () => window.removeEventListener('pastoral:open-bible', handler);
   }, []);
+
+  // Wait for Firebase auth state to resolve before rendering.
+  // Prevents flash of Auth screen on reload when user is still authenticated.
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-parchment">
+        <div className="text-sm text-muted-ink animate-pulse">Loading…</div>
+      </div>
+    );
+  }
 
   if (!user) return <Auth />;
 
@@ -64,6 +75,7 @@ function AppInner() {
 
   return (
     <div className="app-shell flex flex-col overflow-hidden bg-parchment">
+      {isDemoMode && <DemoBanner />}
       <OfflineBanner />
       <div className="min-h-0 flex-1 overflow-hidden">
         {tab === 'home' && <Home onNavigate={handleHomeNavigate} />}
@@ -96,6 +108,14 @@ function OfflineBanner() {
   return (
     <div className="shrink-0 bg-amber-100 px-4 py-1.5 text-center text-xs font-medium text-amber-800">
       You're offline — changes will sync when reconnected
+    </div>
+  );
+}
+
+function DemoBanner() {
+  return (
+    <div className="shrink-0 bg-sky-50 px-4 py-1.5 text-center text-xs font-medium text-sky-800 border-b border-sky-200">
+      Demo mode — data is local only. Configure .env to connect to Firebase.
     </div>
   );
 }

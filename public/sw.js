@@ -1,4 +1,7 @@
-const CACHE_NAME = 'pastoral-v1';
+// Version is injected at build time by vite.config.ts.
+// Changing this string invalidates all old caches on activate.
+const APP_VERSION = 'pastoral-__APP_VERSION__';
+const CACHE_NAME = APP_VERSION;
 const BIBLE_CACHE = 'pastoral-bible-v1';
 
 const APP_SHELL = [
@@ -14,7 +17,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Activate: clean old caches
+// Activate: clean ALL old caches (any cache not matching current version)
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>

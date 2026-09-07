@@ -23,7 +23,7 @@ import {
 } from 'firebase/firestore';
 
 function uid() {
-  return Math.random().toString(36).slice(2, 10);
+  return crypto.randomUUID();
 }
 
 function cleanDoc<T extends Record<string, any>>(obj: T): Record<string, any> {
@@ -55,6 +55,7 @@ function save(key: string, value: unknown) {
 
 interface StoreCtx {
   user: User | null;
+  authLoading: boolean;
   events: CalendarEvent[];
   notes: Note[];
   messages: Message[];
@@ -75,7 +76,7 @@ interface StoreCtx {
   addNote: (n: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateNote: (n: Note) => void;
   deleteNote: (id: string) => void;
-  addMessage: (m: Omit<Message, 'id'>) => void;
+  addMessage: (m: Omit<Message, 'id'> & { id?: string }) => void;
   updateMessage: (m: Message) => void;
   deleteMessage: (id: string) => void;
   addContact: (c: Omit<Contact, 'id'>) => void;
@@ -129,6 +130,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [autoDarkMode, setAutoDarkModeState] = useState<boolean>(() =>
     load<boolean>('shepherd_auto_dark_mode', false),
   );
+  const [authLoading, setAuthLoading] = useState(true);
 
   // Firebase Auth state listener
   useEffect(() => {
@@ -143,7 +145,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           preferredTranslation: 'ESV',
         };
         setUser(pastorUser);
+      } else {
+        // Firebase session ended (sign-out, token revocation, expiry)
+        setUser(null);
       }
+      setAuthLoading(false);
     });
     return () => unsub();
   }, []);
@@ -378,12 +384,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     } catch {
       // Ignore
     }
-    // Restore stub data for demo mode when logged out
-    localStorage.removeItem('shepherd_user');
-    localStorage.removeItem('shepherd_events');
-    localStorage.removeItem('shepherd_notes');
-    localStorage.removeItem('shepherd_messages');
+    // Clear all user data from localStorage (fixes #5 and #6)
+    const STORAGE_KEYS = [
+      'shepherd_user', 'shepherd_events', 'shepherd_notes',
+      'shepherd_messages', 'shepherd_series', 'shepherd_contacts',
+      'shepherd_reading_plans',
+    ];
+    STORAGE_KEYS.forEach((k) => localStorage.removeItem(k));
     setUser(null);
+    // Restore seed data for demo mode
     setEvents(SEED_EVENTS);
     setNotes(SEED_NOTES);
     setMessages(SEED_MESSAGES);
@@ -397,7 +406,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setEvents((prev) => [...prev, item]);
     if (user && auth.app.options.apiKey !== 'demo-api-key') {
       setDoc(doc(db, 'events', newId), cleanDoc({ ...item, userId: user.id })).catch((err) => {
-        console.error('Firestore addEvent error:', err instanceof Error ? err.message : 'Unknown error');
+        if (import.meta.env.DEV) console.error('Firestore addEvent error:', err instanceof Error ? err.message : 'Unknown error');
       });
     }
   };
@@ -407,7 +416,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (user && auth.app.options.apiKey !== 'demo-api-key') {
       setDoc(doc(db, 'events', e.id), cleanDoc({ ...e, userId: user.id }), { merge: true }).catch(
         (err) => {
-          console.error('Firestore updateEvent error:', err instanceof Error ? err.message : 'Unknown error');
+          if (import.meta.env.DEV) console.error('Firestore updateEvent error:', err instanceof Error ? err.message : 'Unknown error');
         },
       );
     }
@@ -427,7 +436,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setNotes((prev) => [...prev, item]);
     if (user && auth.app.options.apiKey !== 'demo-api-key') {
       setDoc(doc(db, 'notes', newId), cleanDoc({ ...item, userId: user.id })).catch((err) => {
-        console.error('Firestore addNote error:', err instanceof Error ? err.message : 'Unknown error');
+        if (import.meta.env.DEV) console.error('Firestore addNote error:', err instanceof Error ? err.message : 'Unknown error');
       });
     }
   };
@@ -438,7 +447,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (user && auth.app.options.apiKey !== 'demo-api-key') {
       setDoc(doc(db, 'notes', n.id), cleanDoc({ ...updated, userId: user.id }), { merge: true }).catch(
         (err) => {
-          console.error('Firestore updateNote error:', err instanceof Error ? err.message : 'Unknown error');
+          if (import.meta.env.DEV) console.error('Firestore updateNote error:', err instanceof Error ? err.message : 'Unknown error');
         },
       );
     }
@@ -451,13 +460,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addMessage = (m: Omit<Message, 'id'>) => {
-    const newId = uid();
-    const item = { ...m, id: newId };
+  const addMessage = (m: Omit<Message, 'id'> & { id?: string }) => {
+    const newId = m.id || uid();
+    const { id: _, ...rest } = m;
+    const item = { ...rest, id: newId };
     setMessages((prev) => [...prev, item]);
     if (user && auth.app.options.apiKey !== 'demo-api-key') {
       setDoc(doc(db, 'messages', newId), cleanDoc({ ...item, userId: user.id })).catch((err) => {
-        console.error('Firestore addMessage error:', err instanceof Error ? err.message : 'Unknown error');
+        if (import.meta.env.DEV) console.error('Firestore addMessage error:', err instanceof Error ? err.message : 'Unknown error');
       });
     }
   };
@@ -467,7 +477,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (user && auth.app.options.apiKey !== 'demo-api-key') {
       setDoc(doc(db, 'messages', m.id), cleanDoc({ ...m, userId: user.id }), { merge: true }).catch(
         (err) => {
-          console.error('Firestore updateMessage error:', err instanceof Error ? err.message : 'Unknown error');
+          if (import.meta.env.DEV) console.error('Firestore updateMessage error:', err instanceof Error ? err.message : 'Unknown error');
         },
       );
     }
@@ -486,7 +496,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setContacts((prev) => [...prev, item]);
     if (user && auth.app.options.apiKey !== 'demo-api-key') {
       setDoc(doc(db, 'contacts', newId), cleanDoc({ ...item, userId: user.id })).catch((err) => {
-        console.error('Firestore addContact error:', err instanceof Error ? err.message : 'Unknown error');
+        if (import.meta.env.DEV) console.error('Firestore addContact error:', err instanceof Error ? err.message : 'Unknown error');
       });
     }
   };
@@ -496,7 +506,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (user && auth.app.options.apiKey !== 'demo-api-key') {
       setDoc(doc(db, 'contacts', c.id), cleanDoc({ ...c, userId: user.id }), { merge: true }).catch(
         (err) => {
-          console.error('Firestore updateContact error:', err instanceof Error ? err.message : 'Unknown error');
+          if (import.meta.env.DEV) console.error('Firestore updateContact error:', err instanceof Error ? err.message : 'Unknown error');
         },
       );
     }
@@ -517,6 +527,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     <Ctx.Provider
       value={{
         user,
+        authLoading,
         events,
         notes,
         messages,

@@ -2,6 +2,7 @@ import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
+import { readFileSync } from 'node:fs'
 
 import siteConfiguration from './.figma/make/site.json'
 
@@ -19,6 +20,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       tailwindcss(),
+      serviceWorkerVersionPlugin(),
       figmaSiteConfiguration(siteConfiguration),
       figmaErrorOverlayReplay(),
       figmaReactRefreshBoundaryFallback(),
@@ -87,10 +89,19 @@ function figmaSiteConfiguration(config: FigmaSiteConfiguration): Plugin {
   const socialImage = config.openGraph?.image ?? ''
   const language = sanitizeHtmlValue(config.language) || 'en'
   const googleAnalyticsId = sanitizeHtmlValue(config.analytics?.googleAnalyticsId)
-  const headStart = config.customScripts?.headStart ?? ''
-  const headEnd = config.customScripts?.headEnd ?? ''
-  const bodyStart = config.customScripts?.bodyStart ?? ''
-  const bodyEnd = config.customScripts?.bodyEnd ?? ''
+  // customScripts are injected into HTML. Sanitize to prevent XSS:
+  // only allow <script> and <style> tags with safe content.
+  const SAFE_SCRIPT_STYLE = /<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi;
+  function sanitizeCustomScript(raw: string): string {
+    if (!raw) return '';
+    // Only allow <script> and <style> tags; strip everything else
+    const matches = raw.match(SAFE_SCRIPT_STYLE);
+    return matches ? matches.join('\n') : '';
+  }
+  const headStart = sanitizeCustomScript(config.customScripts?.headStart ?? '');
+  const headEnd = sanitizeCustomScript(config.customScripts?.headEnd ?? '');
+  const bodyStart = sanitizeCustomScript(config.customScripts?.bodyStart ?? '');
+  const bodyEnd = sanitizeCustomScript(config.customScripts?.bodyEnd ?? '');
   const robotsTxt = config.robots?.index === false ? 'User-agent: *\nDisallow: /\n' : ''
 
   return {
@@ -351,6 +362,45 @@ function figmaMakeKitPlugin(options: { storiesGlob: string | string[] }): Plugin
           next(err as Error)
         }
       })
+    },
+  }
+}
+
+/**
+ * Replaces __APP_VERSION__ in public/sw.js with the package.json version
+ * at build time. This invalidates old service worker caches on deploy.
+ */
+function serviceWorkerVersionPlugin(): Plugin {
+  let appVersion = 'dev'
+  try {
+    const pkg = JSON.parse(readFileSync('package.json', 'utf-8'))
+    appVersion = pkg.version || '0.0.0'
+  } catch {
+    // ignore
+  }
+
+  return {
+    name: 'service-worker-version',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html) {
+        return html
+      },
+    },
+    generateBundle() {
+      // Read sw.js from public, replace placeholder, emit as asset
+      try {
+        const swSource = readFileSync('public/sw.js', 'utf-8')
+        const versioned = swSource.replace('__APP_VERSION__', appVersion)
+        this.emitFile({
+          type: 'asset',
+          fileName: 'sw.js',
+          source: versioned,
+        })
+      } catch {
+        // sw.js not found — skip
+      }
     },
   }
 }

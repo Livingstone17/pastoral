@@ -3,6 +3,7 @@ import { useStore } from '../store';
 import Sheet from './Sheet';
 import ScriptureChip from './ScriptureChip';
 import VoiceMemoButton from './VoiceMemoButton';
+import { memoKey, saveVoiceMemo, dataUrlToBlob, deleteVoiceMemo } from '../services/voiceMemoStore';
 import type { Message, MessageStatus } from '../types';
 
 const STATUSES: { id: MessageStatus; label: string }[] = [
@@ -10,6 +11,11 @@ const STATUSES: { id: MessageStatus; label: string }[] = [
   { id: 'delivered', label: 'Delivered' },
   { id: 'archived', label: 'Archived' },
 ];
+
+/** Generate a stable ID for new messages (used for memo key before save). */
+function generateId() {
+  return crypto.randomUUID();
+}
 
 interface Props {
   open: boolean;
@@ -33,6 +39,10 @@ export default function MessageSheet({ open, message, onClose }: Props) {
   });
   const [refInput, setRefInput] = useState('');
   const [tagInput, setTagInput] = useState('');
+  // Stable ID for new messages — used as the memo key before the message is saved.
+  const [newMessageId] = useState(() => generateId());
+  // The effective message ID (existing or new).
+  const effectiveId = message?.id ?? newMessageId;
 
   useEffect(() => {
     if (!open) return;
@@ -47,6 +57,17 @@ export default function MessageSheet({ open, message, onClose }: Props) {
         tags: [...message.tags],
         voiceMemo: message.voiceMemo,
       });
+
+      // Backward compat: migrate old base64 voiceMemos to IndexedDB
+      if (message.voiceMemo && message.voiceMemo.startsWith('data:')) {
+        const blob = dataUrlToBlob(message.voiceMemo);
+        if (blob) {
+          const key = memoKey(message.id);
+          saveVoiceMemo(key, blob).then(() => {
+            updateMessage({ ...message, voiceMemo: key });
+          }).catch(() => {});
+        }
+      }
     } else {
       setForm({
         title: '',
@@ -95,7 +116,7 @@ export default function MessageSheet({ open, message, onClose }: Props) {
     if (isEditing && message) {
       updateMessage({ ...message, ...data });
     } else {
-      addMessage(data);
+      addMessage({ ...data, id: effectiveId });
     }
     onClose();
   }
@@ -270,7 +291,8 @@ export default function MessageSheet({ open, message, onClose }: Props) {
           </label>
           <VoiceMemoButton
             value={form.voiceMemo}
-            onChange={(dataUrl) => setForm((f) => ({ ...f, voiceMemo: dataUrl }))}
+            messageId={effectiveId}
+            onChange={(key) => setForm((f) => ({ ...f, voiceMemo: key }))}
           />
         </div>
 
@@ -300,6 +322,10 @@ export default function MessageSheet({ open, message, onClose }: Props) {
           <button
             onClick={() => {
               if (message) {
+                // Clean up IndexedDB memo if it exists
+                if (message.voiceMemo && !message.voiceMemo.startsWith('data:')) {
+                  deleteVoiceMemo(message.voiceMemo).catch(() => {});
+                }
                 deleteMessage(message.id);
                 onClose();
               }
