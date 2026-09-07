@@ -66,8 +66,8 @@ interface StoreCtx {
   setDarkMode: (on: boolean) => void;
   autoDarkMode: boolean;
   setAutoDarkMode: (on: boolean) => void;
-  login: (email: string, password: string) => Promise<boolean>;
-  signup: (name: string, email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<string | null>;
+  signup: (name: string, email: string, password: string) => Promise<string | null>;
   logout: () => Promise<void>;
   addEvent: (e: Omit<CalendarEvent, 'id'>) => void;
   updateEvent: (e: CalendarEvent) => void;
@@ -273,11 +273,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, [user?.id]);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    try {
-      if (auth.app.options.apiKey !== 'demo-api-key') {
+  const login = async (email: string, password: string): Promise<string | null> => {
+    if (auth.app.options.apiKey !== 'demo-api-key') {
+      try {
         const res = await signInWithEmailAndPassword(auth, email, password);
-        const demoUser: User = {
+        const pastorUser: User = {
           id: res.user.uid,
           name: res.user.displayName || 'Pastor',
           email: res.user.email || email,
@@ -285,13 +285,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           denomination: 'Presbyterian',
           preferredTranslation: 'ESV',
         };
-        setUser(demoUser);
-        return true;
+        setUser(pastorUser);
+        return null;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'Unknown error';
+        // Map Firebase error codes to user-friendly messages
+        if (msg.includes('auth/user-not-found') || msg.includes('auth/invalid-credential')) {
+          return 'No account found with this email address.';
+        }
+        if (msg.includes('auth/wrong-password') || msg.includes('auth/invalid-password')) {
+          return 'Incorrect password. Please try again.';
+        }
+        if (msg.includes('auth/too-many-requests')) {
+          return 'Too many failed attempts. Please try again later.';
+        }
+        if (msg.includes('auth/network-request-failed')) {
+          return 'Network error. Please check your connection.';
+        }
+        return 'Login failed. Please try again.';
       }
-    } catch (e) {
-      console.warn('Firebase login fallback to demo login', e instanceof Error ? e.message : 'Unknown error');
     }
 
+    // Demo mode: accept any credentials
     const demoUser: User = {
       id: 'u1',
       name: 'Pastor David Kim',
@@ -301,19 +316,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       preferredTranslation: 'ESV',
     };
     setUser(demoUser);
-    return true;
+    return null;
   };
 
-  const signup = async (name: string, email: string, password: string): Promise<void> => {
-    // Clear stub data immediately on new user signup
-    setEvents([]);
-    setNotes([]);
-    setMessages([]);
-    setSeries([]);
-    setContacts([]);
-
-    try {
-      if (auth.app.options.apiKey !== 'demo-api-key') {
+  const signup = async (name: string, email: string, password: string): Promise<string | null> => {
+    if (auth.app.options.apiKey !== 'demo-api-key') {
+      try {
         const res = await createUserWithEmailAndPassword(auth, email, password);
         const newUser: User = {
           id: res.user.uid,
@@ -325,11 +333,32 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         };
         await setDoc(doc(db, 'users', res.user.uid), cleanDoc(newUser));
         setUser(newUser);
-        return;
+        return null;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'Unknown error';
+        if (msg.includes('auth/email-already-in-use')) {
+          return 'An account with this email already exists.';
+        }
+        if (msg.includes('auth/weak-password')) {
+          return 'Password is too weak. Use at least 6 characters.';
+        }
+        if (msg.includes('auth/invalid-email')) {
+          return 'Please enter a valid email address.';
+        }
+        if (msg.includes('auth/network-request-failed')) {
+          return 'Network error. Please check your connection.';
+        }
+        return 'Signup failed. Please try again.';
       }
-    } catch (e) {
-      console.warn('Firebase signup fallback to local', e instanceof Error ? e.message : 'Unknown error');
     }
+
+    // Demo mode: create local user
+    // Clear stub data immediately on new user signup
+    setEvents([]);
+    setNotes([]);
+    setMessages([]);
+    setSeries([]);
+    setContacts([]);
 
     const newUser: User = {
       id: uid(),
@@ -340,6 +369,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       preferredTranslation: 'NIV',
     };
     setUser(newUser);
+    return null;
   };
 
   const logout = async () => {

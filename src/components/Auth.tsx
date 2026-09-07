@@ -10,22 +10,32 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
     if (!email || !password) {
       setError('Please fill in all fields.');
       return;
     }
-    if (mode === 'signup') {
-      if (!name) {
-        setError('Please enter your name.');
-        return;
+    setLoading(true);
+    try {
+      if (mode === 'signup') {
+        if (!name) {
+          setError('Please enter your name.');
+          return;
+        }
+        const err = await signup(name, email, password);
+        if (err) setError(err);
+      } else {
+        const err = await login(email, password);
+        if (err) setError(err);
       }
-      signup(name, email, password);
-    } else {
-      login(email, password);
+    } catch {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -93,9 +103,10 @@ export default function Auth() {
 
           <button
             type="submit"
-            className="mt-1 w-full rounded-xl bg-bark py-3.5 font-medium text-white transition-opacity hover:opacity-90"
+            disabled={loading}
+            className="mt-1 w-full rounded-xl bg-bark py-3.5 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {mode === 'login' ? 'Sign In' : 'Get Started'}
+            {loading ? 'Please wait…' : mode === 'login' ? 'Sign In' : 'Get Started'}
           </button>
         </form>
 
